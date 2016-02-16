@@ -1,0 +1,361 @@
+#!/bin/bash
+VERSION="1.0"
+ANADIZIN="`pwd`"
+TALIMATNAMELER="talimatname"
+DERLEME_SIRASI="derleme.sira"
+PAKETCI="mpsd"
+TALIMATNAME=""
+LOG_DIZIN="log"
+AYARLAR="ayarlar"
+PAKETCI_AYAR="mpsd.conf"
+
+
+birinci_ayarlar(){
+		root_kontrol
+		lfs_kontrol
+		#lfs dizinin olusturulması
+		mkdir -p /mnt/lfs
+		#lfs kullanici-grup silme sıfırlama
+		userdel lfs
+		rm -r /home/lfs
+		groupdel lfs
+		#lfs kullanici-grup olusturma
+		groupadd lfs
+		useradd -s /bin/bash -g lfs -m -k /dev/null lfs
+		passwd lfs
+		#lfs icin gerekli dizin ve izinlerinin olusturulması
+		mkdir -vp $LFS/{sources,tools}
+		ln -svf $LFS/tools /
+		ln -svf $LFS/sources /
+		chown -v lfs $LFS/{tools,sources}
+		chmod -v a+wt $LFS/sources
+		chown -v lfs $LFS
+		cp -a $ANADIZIN/* /home/lfs/
+		chown -R lfs:lfs /home/lfs/
+		cp ayarlar/.bashrc /home/lfs/
+		cp ayarlar/.bash_profile /home/lfs/
+			
+		su - lfs
+}
+
+paket_kur(){
+	$PAKETCI -d -cf $ANADIZIN/$AYARLAR/$PAKETCI_AYAR -i || exit 1
+	for i in *mps*
+	do
+	 echo "=======> '$i' basarili sekilde kuruldu." >> $ANADIZIN/$LOG_DIZIN/$talimat.log
+	done
+}
+
+talimatname_derle(){
+	#dongu icerisinde talimatların derlenmesi
+	if [ "$TALIMATNAME" == "onsistem" ]; then
+		PAKETCI_AYAR="onmpsd.conf"
+	fi
+	if [ ! -d $ANADIZIN/$LOG_DIZIN ]; then
+		mkdir -p $ANADIZIN/$LOG_DIZIN
+	fi
+	for dizin in `cat $ANADIZIN/$TALIMATNAMELER/$TALIMATNAME/$DERLEME_SIRASI`
+	do
+		talimat=`basename $dizin`
+		derleme="evet"
+		if [ -f $ANADIZIN/$LOG_DIZIN/$talimat.log ]; then
+		  derleme=`grep -q "basarili" $ANADIZIN/$LOG_DIZIN/$talimat.log; [ $? -eq 0 ] && echo "hayir" || echo "evet"`
+		fi
+		if [ "$derleme" == "evet" ]; then
+			cd $ANADIZIN/$TALIMATNAMELER/$TALIMATNAME/$dizin
+			touch $ANADIZIN/$LOG_DIZIN/$talimat.log
+			$PAKETCI -d -cf $ANADIZIN/$AYARLAR/$PAKETCI_AYAR -kw 2>&1|tee $ANADIZIN/$LOG_DIZIN/$talimat.log || exit 1
+			
+			case $talimat in
+			  gcc)
+				rm -fv /usr/lib{,64}/libgcc_s.so{,.1}
+				rm -fv /usr/lib{,64}/libstdc++.so{,.6}
+				rm -fv /usr/lib{,64}/libstdc++.la
+				;;
+			   bash)
+				rm /bin/bash
+				rm /bin/sh
+				echo "bash chroot dısına cıkılıp elle kurulmalıdır."
+				echo "=======> '$i' basarili sekilde kuruldu." >> $ANADIZIN/$LOG_DIZIN/$talimat.log
+				exit 1
+				;;
+			  coreutils)
+				rm -f /usr/bin/env
+				for i in cat echo pwd stty
+				do
+					rm -f /bin/$i
+				done
+				;;
+			  perl)
+				rm -f /usr/bin/perl
+				;;
+			  cards)
+				rm -f /etc/pkgadd.conf
+				;;
+			esac
+			if [ "$TALIMATNAME" != "onsistem" ] && [ "$talimat" != "bash" ]; then
+			paket_kur
+			fi
+		fi
+		if ( grep "^=======>" $ANADIZIN/$LOG_DIZIN/$talimat.log| tail -1 |grep "ERROR"  > /dev/null);then
+			exit 1
+		fi
+		cd -
+	done
+}
+
+ikinci_ayarlar(){
+	root_kontrol
+	lfs_kontrol
+	unmount_islemi
+	mv /mnt/sources_depo /mnt/lfs/sources 
+	chown -R root:root $LFS
+	install -dv -m0750  $LFS/root
+	rm -r $LFS/root/bin
+	rm -r $LFS/root/$TALIMATNAMELER
+	rm -r $LFS/root/$LOG_DIZIN
+	cp -a $ANADIZIN/bin $LFS/root/
+	cp -a $TALIMATNAMELER $LFS/root/
+	cp -a $AYARLAR $LFS/root/
+	cp -a $ANADIZIN/lfs-mekanizma $LFS/root/
+	cp $ANADIZIN/bin/mpsd $LFS/tools/bin
+	cd $LFS/root/$TALIMATNAMELER/temel/nutyx
+	/tools/bin/mpsd -cf $ANADIZIN/ayarlar/mpsd.conf
+	/tools/bin/pkgadd -r $LFS nutyx1*
+	/tools/bin/pkgadd -r $LFS nutyx.man1*
+	/tools/bin/pkginfo -r $LFS -i
+	bash $LFS/root/bin/install-houaphan -ic
+	cp $ANADIZIN/ayarlar/mpsd.conf $LFS/etc/
+	cp $ANADIZIN/ayarlar/onmpsd.conf $LFS/etc/
+}
+
+
+mount_islemi(){
+	cp -v /etc/resolv.conf $LFS/etc
+	mount -v -B /dev $LFS/dev
+	mount -vt devpts devpts $LFS/dev/pts
+	mount -vt proc proc $LFS/proc
+	mount -vt sysfs sysfs $LFS/sys
+	if [ -h /dev/shm ]; then rm -f $LFS/dev/shm;mkdir $LFS/dev/shm;fi
+	mount -vt tmpfs shm $LFS/dev/shm
+	chmod 1777 /dev/shm
+}
+
+chroot_gir(){
+	root_kontrol
+	lfs_kontrol
+	unmount_islemi
+	mount_islemi
+	chroot "$LFS" /usr/bin/env -i HOME=/root TERM="$TERM" PS1='\u:\w\$ ' /bin/bash --login +h 
+}
+
+
+unmount_islemi() {
+	umount $LFS/dev/shm
+	umount $LFS/run
+	umount $LFS/dev/pts
+	umount $LFS/dev
+	umount $LFS/proc
+	umount $LFS/sys
+}
+
+bash_kur(){
+	cd $LFS/root/talimatname/temel/bash
+	for PACK in *.xz; do /tools/bin/pkgadd -r $LFS $PACK;done
+	#kuruldugunu gormek icin
+	/tools/bin/pkginfo -r $LFS -i|grep bash
+}
+
+onsistem_sfs(){
+	tarih=`date +%Y-%m-%d`
+	mv /mnt/lfs/sources /mnt/sources_depo
+	mksquashfs /mnt/lfs malfs-asama1-onsistem_$tarih.sfs -comp xz
+}	
+
+temel_sfs(){
+	unmount_islemi
+	tarih=`date +%Y-%m-%d`
+	mv /mnt/lfs/sources /mnt/sources_depo
+	mv /mnt/lfs/tools /mnt/tools_ydk
+	mv /mnt/lfs/paket_depo /mnt/base_paket_depo
+	mksquashfs /mnt/lfs malfs-asama2-temel_$tarih.sfs -comp xz
+	mv /mnt/sources_depo /mnt/lfs/sources
+}
+
+son_sfs(){
+	unmount_islemi
+	tarih=`date +%Y-%m-%d`
+	mv /mnt/lfs/sources /mnt/sources_depo
+	mv /mnt/lfs/paket_depo /mnt/paket_depo
+	mksquashfs /mnt/lfs malfs-asama3-sonsistem_$tarih.sfs -comp xz
+}
+
+baslatici_olustur(){
+	rm /boot/initramfs
+	#kernelv=`ls /boot/kernel-* | cut -d'-' -f2`
+	kernelv=`ls /lib/modules`
+	#mkdir -p /usr/lib/dracut/modules.d/01milis
+	#cp /root/bin/dracut/* /usr/lib/dracut/modules.d/01milis/
+	#dracut -N --xz --force-add milis --omit systemd /boot/initramfs $kernelv
+	dracut -N --force --xz --add 'dmsquash-live pollcdrom' --omit systemd  /boot/initramfs $kernelv
+}
+
+squashfs_olustur(){
+    unmount_islemi
+    lfs_kontrol
+    iso_etiket="malfsLive"
+    rm iso_icerik/boot/kernel
+    rm iso_icerik/boot/initramfs
+    rm -r iso_icerik/LiveOS
+    cp $LFS/boot/kernel-* iso_icerik/boot/kernel
+    cp $LFS/boot/initramfs* iso_icerik/boot/initramfs
+    anayer=$(du -sm "$LFS"|awk '{print $1}')
+    fazladan="$((anayer))"
+    mkdir -p tmp
+    mkdir -p tmp/LiveOS
+    #fallocate -l 32G tmp/LiveOS/rootfs.img
+    #if [ -f $bos_imaj ];
+	#then
+	   #cp $bos_imaj tmp/LiveOS/ext3fs.img
+	#else
+	   #dd if=/dev/zero of=tmp/LiveOS/ext3fs.img bs=1MB count="$((anayer+fazladan))"
+	dd if=/dev/zero of=tmp/LiveOS/ext3fs.img bs=1MB count="$((anayer+fazladan))"
+	#dd if=/dev/zero of=tmp/LiveOS/ext3fs.img bs=1MB count=16192
+    mke2fs -t ext4 -L $iso_etiket -F tmp/LiveOS/ext3fs.img
+    mkdir -p temp-root
+    mount -o loop tmp/LiveOS/ext3fs.img temp-root
+    cp -dpR $LFS/* temp-root/
+    #rsync -a kur/ temp-root
+    umount -l temp-root
+    rm -rf temp-root 
+    mkdir -p iso_icerik/LiveOS
+    mksquashfs tmp iso_icerik/LiveOS/squashfs.img -comp xz -b 256K -Xbcj x86
+    chmod 444 iso_icerik/LiveOS/squashfs.img
+    rm -rf tmp
+}
+
+iso_olustur(){
+	rm malfs.iso
+	genisoimage -l -V malfsLive -R -J -pad -no-emul-boot -boot-load-size 4 -boot-info-table  \
+	-b boot/isolinux/isolinux.bin -c boot/isolinux/isolinux.cat -o malfs.iso iso_icerik && isohybrid malfs.iso
+}
+
+temizlik(){
+	rm -r /tools/*
+	rm -r chroot/.log/*
+	rm -r /tmp/work
+}
+
+lfs_kontrol(){
+	if [ -z "${LFS}" ]; then
+		echo "export LFS=/mnt/lfs"
+		echo "komutu verilmeli"
+		exit 1
+	fi
+}
+
+root_kontrol(){
+	if [ ! $(whoami) == "root" ]; then
+		echo "mekanizma işlemleri için root olmalısınız."
+		exit 1
+	fi
+}
+
+#calisma ortaminin klonlanmasi
+
+git_clone(){
+	git clone git://github.com/milisarge/malfs malfs
+
+}
+
+kaynak_kodlar_indir(){
+	lfs_kontrol
+	for i in `cat kaynaklar.liste`
+	do
+		#FILE=`echo $i|cut -d "|" -f2`
+		link=$i
+		#MD5SUM=`echo $i|cut -d "|" -f1`
+		MD5SUM="iptal"
+		if [ ! -f $LFS/sources/$link ]; then
+			wget -nc --no-check-certificate $link -P $LFS/sources
+		fi
+		if [ "$MD5SUM" != "iptal" ]; then
+			echo "$MD5SUM  $FILE" >> $LFS/sources/.md5sums
+		fi
+	done
+}
+
+
+parametre_analiz() {
+	while [ "$1" ]; do
+		case $1 in
+			-h|--help)
+				print_help
+				exit 0;;
+			-gk|--gerek-kontrol)
+				./bin/version-check.sh
+				exit 0;;
+			-ki|--kaynak-indir)
+				kaynak_kodlar_indir
+				exit 0;;
+			-cg|--chroot-gir)
+				chroot_gir
+				exit 0;;
+			-os|--onsistem-sfs)
+				onsistem_sfs
+				exit 0;;
+			-ts|--temel-sfs)
+				temel_sfs
+				exit 0;;
+			-ss|--son-sfs)
+				son_sfs
+				exit 0;;
+			-bo|--initrd-yap)
+				baslatici_olustur
+				exit 0;;
+			-so|--squashfs-yap)
+				squashfs_olustur
+				exit 0;;
+			-io|--iso-yap)
+				iso_olustur
+				exit 0;;
+			-ba|--birinci-ayarlar)
+				birinci_ayarlar
+				exit 0;;
+			-ia|--ikinci-ayarlar)
+				ikinci_ayarlar
+				exit 0;;
+			-mi|--mount-islemi)
+				mount_islemi
+				exit 0;;
+			-bk|--bash-kur)
+				bash_kur
+				exit 0;;
+			-ui|--unmount-islemi)
+				unmount_islemi
+				exit 0;;
+			-te|--temizlik)
+				temizlik
+				exit 0;;
+			-td|--tlm-derle)
+				if [ ! "$2" ]; then
+					echo "talimatname dizini giriniz."
+					echo "ornek: lfs-mekanizma -td temel"
+					exit 1
+				fi
+				TALIMATNAME="$2"
+				talimatname_derle
+				shift;;
+			-v|--version)
+				echo "`basename $0` $VERSION"
+				exit 0;;
+			*)
+				echo "`basename $0`: gecersiz parametre $1"
+				exit 1 ;;
+		esac
+		shift
+	done
+}
+
+parametre_analiz "$@"
+
