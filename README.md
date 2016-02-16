@@ -104,7 +104,7 @@ Milis Automated Linux From Scratch
  
  en son bu mesaj ile derleme bitmelidir.
  
- =======>  'ca-certificates1454979192x86_64.mps.xz' basarili sekilde kuruldu.
+ =======>  'ca-certificates#20160110-x86_64.mps.xz' basarili sekilde kuruldu.
 
  temel sistem paketlerin paket_depo altında toplanması-paketlerin arsivlenmesi
 
