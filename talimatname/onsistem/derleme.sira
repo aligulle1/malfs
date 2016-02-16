@@ -10,9 +10,9 @@ expect
 dejagnu
 check
 ncurses
-bash
+0bash
 bzip2
-coreutils
+0coreutils
 diffutils
 file
 findutils
@@ -23,7 +23,7 @@ gzip
 m4
 make
 patch
-perl
+0perl
 sed
 tar
 texinfo
@@ -31,4 +31,4 @@ util-linux
 xz
 zlib
 libarchive
-cards
+0cards

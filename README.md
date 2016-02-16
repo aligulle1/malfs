@@ -27,6 +27,8 @@ Milis Automated Linux From Scratch
  root@makine:/opt/malfs# ./lfs-mekanizma -gk
  
  yukarıdaki işlemin sonucuna göre gerekli gereksinimler yuklenir.
+ 
+ ayrıca http://www.linuxfromscratch.org/lfs/view/development/prologue/hostreqs.html sayfasından versiyon kontrolü yapınız.
 
  gereksinimler tamamlandıktan sonra gerekli ortam değişkeni ayarı yapılır.
 
@@ -44,7 +46,7 @@ Milis Automated Linux From Scratch
  
  lfs@makine:~$ ./lfs-mekanizma -td onsistem
 
- =======>  '/home/lfs/talimatname/onsistem/0cards/0cards1454974401x86_64.mps.xz' derleme basarili
+ =======>  '/home/lfs/talimatname/onsistem/0cards/0cards#1.99.7-x86_64.mps.xz' derleme basarili
  
  yukarıdaki ifade goruldukten sonra exit komutu ile lfs kullanıcısından çıkılır.
 
