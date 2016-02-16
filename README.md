@@ -42,7 +42,7 @@ Milis Automated Linux From Scratch
 
  lfs kullanıcısıyla oturum acılmış olur.önsistem derlenmeye baslanır.
  
- lfs@cerbuho:~$ ./lfs-mekanizma -td onsistem
+ lfs@makina:~$ ./lfs-mekanizma -td onsistem
 
  =======>  '/home/lfs/talimatname/onsistem/0cards/0cards1454974401x86_64.mps.xz' derleme basarili
  
