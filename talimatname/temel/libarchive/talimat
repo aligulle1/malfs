@@ -49,7 +49,7 @@ $PKG/usr/lib/libarchive.so.13.1.2
 devel() {
 cd $PKG
 bsdtar -cf \
-$PKGMK_PACKAGE_DIR/${name}.devel${PKGMK_BUILDVER}`uname -m`.$PKGMK_PACKAGE_EXT \
+$PKGMK_PACKAGE_DIR/${name}.devel#$version-`uname -m`.$PKGMK_PACKAGE_EXT \
 usr/lib/libarchive.a usr/lib/libarchive.la usr/include usr/lib/pkgconfig
 rm -r usr/lib/libarchive.a usr/lib/libarchive.la usr/include usr/lib/pkgconfig
 }

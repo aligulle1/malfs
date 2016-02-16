@@ -23,7 +23,7 @@ devel()
 {
 cd $PKG
 bsdtar -cf \
-$PKGMK_PACKAGE_DIR/${name}.devel${PKGMK_BUILDVER}any.$PKGMK_PACKAGE_EXT \
+$PKGMK_PACKAGE_DIR/${name}.devel#$version-any.$PKGMK_PACKAGE_EXT \
 usr/include usr/share/aclocal usr/share/gettext
 
 rm -r usr/include usr/share/aclocal usr/share/gettext

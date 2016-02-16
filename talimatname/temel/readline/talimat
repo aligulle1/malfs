@@ -50,7 +50,7 @@ devel()
 {
 cd $PKG
 bsdtar -cf \
-$PKGMK_PACKAGE_DIR/${name}.devel${PKGMK_BUILDVER}any.$PKGMK_PACKAGE_EXT \
+$PKGMK_PACKAGE_DIR/${name}.devel#$version-any.$PKGMK_PACKAGE_EXT \
 usr/lib/libhistory.a usr/lib/libreadline.a usr/include usr/share/readline \
 usr/lib/libhistory.so usr/lib/libreadline.so
 rm -r usr/lib/libhistory.a usr/lib/libreadline.a usr/include usr/share/readline \

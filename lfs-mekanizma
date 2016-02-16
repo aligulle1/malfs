@@ -1,6 +1,7 @@
 #!/bin/bash
 VERSION="1.0"
 ANADIZIN="`pwd`"
+kaynak_url="http://downloads.nutyx.org/current/sources"
 TALIMATNAMELER="talimatname"
 DERLEME_SIRASI="derleme.sira"
 PAKETCI="mpsd"
@@ -24,6 +25,7 @@ birinci_ayarlar(){
 		useradd -s /bin/bash -g lfs -m -k /dev/null lfs
 		passwd lfs
 		#lfs icin gerekli dizin ve izinlerinin olusturulması
+		mkdir -p /home/lfs
 		mkdir -vp $LFS/{sources,tools}
 		ln -svf $LFS/tools /
 		ln -svf $LFS/sources /
@@ -270,16 +272,14 @@ git_clone(){
 
 kaynak_kodlar_indir(){
 	lfs_kontrol
-	for i in `cat kaynaklar.liste`
+	for i in `cat kaynaklar.liste|grep -v ^#|sed "s@  @|@"`
 	do
-		#FILE=`echo $i|cut -d "|" -f2`
-		link=$i
-		#MD5SUM=`echo $i|cut -d "|" -f1`
-		MD5SUM="iptal"
-		if [ ! -f $LFS/sources/$link ]; then
-			wget -nc --no-check-certificate $link -P $LFS/sources
+		FILE=`echo $i|cut -d "|" -f2`
+		MD5SUM=`echo $i|cut -d "|" -f1`
+		if [ ! -f $LFS/sources/$FILE ]; then
+			wget -nc --no-check-certificate $kaynak_url/$FILE -P $LFS/sources
 		fi
-		if [ "$MD5SUM" != "iptal" ]; then
+		if [ "$MD5SUM" != "skip" ]; then
 			echo "$MD5SUM  $FILE" >> $LFS/sources/.md5sums
 		fi
 	done

@@ -51,7 +51,7 @@ devel()
 {
 cd $PKG
 bsdtar -cf \
-$PKGMK_PACKAGE_DIR/${name}.devel${PKGMK_BUILDVER}any.$PKGMK_PACKAGE_EXT \
+$PKGMK_PACKAGE_DIR/${name}.devel#$version-any.$PKGMK_PACKAGE_EXT \
 usr/include usr/lib/pkgconfig usr/share/et usr/share/ss
 
 rm -r usr/{include,lib/pkgconfig,share/et,share/ss}

@@ -42,7 +42,7 @@ devel()
 {
 cd $PKG
 bsdtar -cf \
-$PKGMK_PACKAGE_DIR/${name}.devel${PKGMK_BUILDVER}`uname -m`.$PKGMK_PACKAGE_EXT \
+$PKGMK_PACKAGE_DIR/${name}.devel#$version-`uname -m`.$PKGMK_PACKAGE_EXT \
 usr/include usr/lib usr/share/bash-completion
 rm -r usr/{include,lib,share/bash-completion}
 }	

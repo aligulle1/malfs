@@ -31,7 +31,7 @@ devel()
 {
 cd $PKG
 bsdtar -cf \
-$PKGMK_PACKAGE_DIR/$name.devel${PKGMK_BUILDVER}any.$PKGMK_PACKAGE_EXT \
+$PKGMK_PACKAGE_DIR/$name.devel#$version-any.$PKGMK_PACKAGE_EXT \
 usr/lib \
 usr/include
 rm -r usr/lib \
