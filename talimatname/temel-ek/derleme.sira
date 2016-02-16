@@ -1,4 +1,3 @@
-e3
 git
 mdadm
 btrfs-progs
@@ -7,10 +6,10 @@ xfsprogs
 libtirpc
 rpcbind
 nfs-utils
-vim
 jfsutils
-grub
 dhcpcd
 linux-firmware
-kernel-lts
 kernel
+dracut
+vim
+nano
