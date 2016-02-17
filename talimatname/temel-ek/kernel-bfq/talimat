@@ -129,7 +129,7 @@ do rm -rf usr/src/linux-$version/arch/$i
 done
 
 bsdtar -cf \
-$PKGMK_PACKAGE_DIR/$name.devel#$version-any.cards.tar \
+$PKGMK_PACKAGE_DIR/$name.devel#$version-any.mps \
 usr/src/linux-$version
 
 rm -r usr
@@ -143,7 +143,7 @@ mv $SRC/linux-version/Documentation \
 usr/share/doc/linux-$version
 
 bsdtar -cf \
-$PKGMK_PACKAGE_DIR/$name.doc#$version-any.cards.tar \
+$PKGMK_PACKAGE_DIR/$name.doc#$version-any.mps \
 usr/share/doc/linux-$version
 
 rm -r usr
