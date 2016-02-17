@@ -122,8 +122,8 @@ ikinci_ayarlar(){
 	cp $ANADIZIN/bin/mpsd $LFS/tools/bin
 	cd $LFS/root/$TALIMATNAMELER/temel/nutyx
 	/tools/bin/mpsd -cf $ANADIZIN/ayarlar/mpsd.conf
-	/tools/bin/pkgadd -r $LFS nutyx1*
-	/tools/bin/pkgadd -r $LFS nutyx.man1*
+	/tools/bin/pkgadd -r $LFS nutyx#*
+	/tools/bin/pkgadd -r $LFS nutyx.man#*
 	/tools/bin/pkginfo -r $LFS -i
 	bash $LFS/root/bin/install-houaphan -ic
 	cp $ANADIZIN/ayarlar/mpsd.conf $LFS/etc/
