@@ -1,7 +1,6 @@
 #!/bin/bash
 VERSION="1.0"
 ANADIZIN="`pwd`"
-kaynak_url="http://downloads.nutyx.org/current/sources"
 TALIMATNAMELER="talimatname"
 DERLEME_SIRASI="derleme.sira"
 PAKETCI="mpsd"
@@ -272,14 +271,13 @@ git_clone(){
 
 kaynak_kodlar_indir(){
 	lfs_kontrol
-	for i in `cat kaynaklar.liste|grep -v ^#|sed "s@  @|@"`
+	mkdir -p $LFS/sources
+	for link in `cat kaynaklar.liste`
 	do
-		FILE=`echo $i|cut -d "|" -f2`
-		MD5SUM=`echo $i|cut -d "|" -f1`
-		if [ ! -f $LFS/sources/$FILE ]; then
-			wget -nc --no-check-certificate $kaynak_url/$FILE -P $LFS/sources
-		fi
-		if [ "$MD5SUM" != "skip" ]; then
+		#MD5SUM=`echo $i|cut -d "|" -f1`
+		MD5SUM="iptal"
+		wget -nc --no-check-certificate $link -P $LFS/sources
+		if [ "$MD5SUM" != "iptal" ]; then
 			echo "$MD5SUM  $FILE" >> $LFS/sources/.md5sums
 		fi
 	done

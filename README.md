@@ -32,6 +32,8 @@ Milis Automated Linux From Scratch
 
  gereksinimler tamamlandıktan sonra gerekli ortam değişkeni ayarı yapılır.
 
+ root@makine:/opt/malfs# mkdir -p /mnt/lfs
+
  root@makine:/opt/malfs# export LFS=/mnt/lfs
 
  gerekli kaynak kodların indirilmesi 
