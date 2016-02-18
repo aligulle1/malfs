@@ -6,6 +6,7 @@ ikaynak=""
 betikad=${0##*/}
 kurulum_onay="evet"
 dokunulmaz="/etc/dokunulmaz"
+talimatname_dizin="/root/talimatname"
 
 icerik_ekle(){
 	paketad=`echo "$1" | cut -d'#' -f1`	
@@ -57,6 +58,40 @@ paket_bilgi(){
 		cat /var/lib/pkg/DB/"$paket"/META
 	else
 		echo "paket kurulu değil!"
+	fi
+
+}
+
+paket_derle(){
+	local konum derleme_onay eh
+	derleme_onay="h"
+	konum="`find "$talimatname_dizin" -name $1`"
+	if [ -d "$konum" ];then
+		rm -r tmp."$1"
+		mkdir tmp."$1" 
+		cp -a $konum/* tmp."$1"/
+		cd tmp."$1"
+		if [ `kurulu_kontrol "$1"` = "kurulu" ];then
+			while true; do
+				read -p "paket zaten kurulu yine de derlensin mi?" eh
+				case $eh in
+					[Ee]* ) derleme_onay="e"; break;;
+					[Hh]* ) break;;
+					* ) echo "e veya h";;
+				esac
+			done
+		fi 
+		if [ "$derleme_onay" = "e" ];then
+			mpsd -d
+			if [ "$kurulum_onay" = "evet" ];then
+				mps -k "$1*"
+				mps -k "$1.devel*"
+			fi
+			mv *.mps.xz ../
+		fi 
+		cd ..
+	else
+		echo "talimat dosyası bulunamadı."
 	fi
 
 }
@@ -128,6 +163,8 @@ ayarlar() {
 				ikaynak="yerel" ;;
 			-s|--pksl)
 				paket_sil "$2" ;;
+			-d|--pkdr)
+				paket_derle "$2" ;;
 			-b|--pkbl)
 				paket_bilgi "$2" ;;
 			-G|--pvtg)
