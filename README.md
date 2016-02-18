@@ -104,7 +104,7 @@ Milis Automated Linux From Scratch
 
  root [ / ]#  ./lfs-mekanizma -td temel
  
- en son bu mesaj ile derleme bitmelidir.
+ en son aşağıdaki mesaj ile derleme bitmelidir.
  
  =======>  'ca-certificates#20160110-x86_64.mps.xz' basarili sekilde kuruldu.
 
