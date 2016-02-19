@@ -1,7 +1,7 @@
 #!/bin/bash
 versiyon="0.1"
 paketdepo="/depo/paketler/"
-sunucu="192.168.3.193:8000/paketdepo/"
+sunucu="192.168.4.24:8000/paketdepo/"
 ikaynak=""
 betikad=${0##*/}
 kurulum_onay="evet"
@@ -26,7 +26,6 @@ paket_sil(){
 		kkont=`kurulu_kontrol "$1"`
 		if [ "$kkont" = "kurulu" ];then
 			paket="$1"
-			
 			echo $paket" paketi siliniyor."
 			#while IFS='' read -r line || [[ -n "$line" ]]; do
 			while read -r dosya
@@ -62,38 +61,58 @@ paket_bilgi(){
 
 }
 
+paket_derle_oto(){
+	for bagim in `bagimli_bilgi "$1"`;do
+		echo $bagim "derlenecek"
+		paket_derle_oto "$bagim"
+	done
+	paket_derle "$1"
+} 
+      
 paket_derle(){
-	local konum derleme_onay eh
+	local konum derleme_onay eh bagimd
 	derleme_onay="h"
 	konum="`find "$talimatname_dizin" -name $1`"
 	if [ -d "$konum" ];then
-		rm -r tmp."$1"
-		mkdir tmp."$1" 
+		mkdir -p tmp."$1" 
 		cp -a $konum/* tmp."$1"/
 		cd tmp."$1"
+		
 		if [ `kurulu_kontrol "$1"` = "kurulu" ];then
 			while true; do
-				read -p "paket zaten kurulu yine de derlensin mi?" eh
+				read -p "$1 paketi zaten kurulu yine de derlensin mi?" eh
 				case $eh in
 					[Ee]* ) derleme_onay="e"; break;;
 					[Hh]* ) break;;
 					* ) echo "e veya h";;
 				esac
 			done
+		else
+			derleme_onay="e"
 		fi 
 		if [ "$derleme_onay" = "e" ];then
-			mpsd -d
+			echo "$1" "derleniyor...."
+			mpsd -d > /dev/null
 			if [ "$kurulum_onay" = "evet" ];then
-				mps -k "$1*"
-				mps -k "$1.devel*"
+				for kpkt in `ls $1* | cut -d'#' -f1`;do
+					mps -k "$kpkt#"*
+				done	
 			fi
 			mv *.mps.xz ../
 		fi 
 		cd ..
+		rm -r tmp."$1"
 	else
 		echo "talimat dosyası bulunamadı."
 	fi
 
+}
+
+bagimli_bilgi(){
+	local bagimd konum
+	konum="`find "$talimatname_dizin" -name $1`"
+	bagimd=`cat $konum/talimat | grep "Depends" | cut -d':' -f2`
+	echo $bagimd	
 }
 
 kurulu_kontrol(){
@@ -142,11 +161,7 @@ paketvt_kontrol(){
 }
 
 yardim(){
- echo "ağdan kurulum"		
- echo "paketkur -ak nano "
- echo ""
- echo "yerelden kurulum"
- echo "paketkur -yk /a/b/nano.mps.xz "
+ echo "yardim"
 }
 
 
@@ -163,10 +178,17 @@ ayarlar() {
 				ikaynak="yerel" ;;
 			-s|--pksl)
 				paket_sil "$2" ;;
-			-d|--pkdr)
+			-d|--pkde)
+				kurulum_onay="olumsuz"
 				paket_derle "$2" ;;
+			-dk|--pkdk)
+				paket_derle "$2" ;;	
+			-odk|--pkodk)
+				paket_derle_oto "$2" ;;	
 			-b|--pkbl)
 				paket_bilgi "$2" ;;
+			-bb|--pkbb)
+				bagimli_bilgi "$2" ;;
 			-G|--pvtg)
 				paketvt_guncelle ;;
 			-g|--pkgu)
@@ -235,9 +257,12 @@ fi
 if [ "$ikaynak" = "yerel" ]; then
 	pkontrol=`basename $2 | grep -w "mps.xz"`
 	if [ ! -z "$pkontrol" -a "$pkontrol" != "" ]; then
-		kkont=`kurulu_kontrol "$2"`
+		paketad=`echo "$2" | cut -d'#' -f1`	
+		kkont=`kurulu_kontrol "$paketad"`
 		if [ "$kkont" = "degil" ];then
 			icerik_ekle "$2"
+		else
+			echo "$2 paketi zaten kurulu"
 		fi
 	else
 		echo "yerelde mps paketi bulunamadı."
